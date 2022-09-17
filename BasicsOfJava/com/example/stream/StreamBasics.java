@@ -29,6 +29,11 @@ public class StreamBasics {
                 .filter(car -> car.price >= 200000 && car.price < 600000)
                 .filter(car -> car.topSpeed >= 200 && car.topSpeed < 300)
                 .forEach(car -> System.out.println(car));
+        /*
+                Car {name = 'Dodge', topSpeed = 250, price = 300000, rating = 4}
+                Car {name = 'Merc', topSpeed = 250, price = 400000, rating = 5}
+                Car {name = 'BMW', topSpeed = 240, price = 300000, rating = 5}
+         */
 
     }
 }
