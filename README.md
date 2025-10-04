@@ -18,22 +18,24 @@
 ---
 
 ## Структура проекта
+```
 .
 ├─ src/
-│ ├─ session.py # инициализация SparkSession
-│ ├─ etl.py # чтение/базовая очистка
-│ ├─ features.py # фичи и агрегаты (Telco-специфика)
-│ └─ job.py # entrypoint (config -> run)
+│  ├─ session.py         # инициализация SparkSession
+│  ├─ etl.py             # чтение/базовая очистка
+│  ├─ features.py        # фичи и агрегаты (Telco-специфика)
+│  └─ job.py             # entrypoint (config -> run)
 ├─ configs/
-│ └─ config.yaml # пути/параметры пайплайна
+│  └─ config.yaml        # пути/параметры пайплайна
 ├─ data/
-│ └─ WA_Fn-UseC_-Telco-Customer-Churn.csv
-├─ artifacts/ # выходы пайплайна (в .gitignore)
+│  └─ WA_Fn-UseC_-Telco-Customer-Churn.csv
+├─ artifacts/            # выходы пайплайна (в .gitignore)
 ├─ notebooks/
-│ └─ 01_demo.ipynb # демонстрационный ноутбук
+│  └─ 01_demo.ipynb      # демонстрационный ноутбук
 ├─ requirements.txt
 ├─ .gitignore
 └─ LICENSE
+```
 
 ---
 
