@@ -1,0 +1,7 @@
+artifacts/
+.ipynb_checkpoints/
+__pycache__/
+*.log
+*.crc
+data/*/
+!data/sample/

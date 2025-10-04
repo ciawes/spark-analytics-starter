@@ -1,0 +1,16 @@
+app_name: "SparkTelcoChurn"
+shuffle_partitions: 8
+
+input:
+  path: "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  fmt: "csv"
+  header: true
+  infer_schema: true
+
+report:
+  # Под агрегаты в отчёте: контракты × интернет-сервис × факт оттока
+  group_by: ["Contract", "InternetService", "Churn"]
+
+output:
+  dir: "artifacts"
+  fmt: "parquet"
