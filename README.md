@@ -4,34 +4,34 @@
 [![PySpark](https://img.shields.io/badge/pyspark-3.5.x-orange.svg)](https://spark.apache.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Мини-шаблон воспроизводимого пайплайна на **PySpark**: чтение данных → очистка → инженерия признаков → агрегаты → выгрузка артефактов.  
-В качестве примера используется публичный датасет **Telco Customer Churn** (CSV).
+Reproducible **PySpark** starter: data reading → cleaning → feature engineering → group aggregations → artifact export.  
+Example dataset: **Telco Customer Churn** (CSV).
 
 ---
 
-## Зачем это нужно
-- Чёткая структура проекта (`src/`, `configs/`, `notebooks/`, `artifacts/`).
-- Управление параметрами через YAML-конфиг.
-- Запуск одной командой: воспроизводимый ETL/фичи/отчёты.
-- Ноутбук — только для демонстрации (без бизнес-логики внутри).
+## Why this repo
+- Clear structure (`src/`, `configs/`, `notebooks/`, `artifacts/`)
+- Config‑driven (YAML)
+- One‑command run: reproducible ETL / features / reports
+- Notebook is demo‑only (no business logic inside)
 
 ---
 
-## Структура проекта
+## Project structure
 ```
 .
 ├─ src/
-│  ├─ session.py         # инициализация SparkSession
-│  ├─ etl.py             # чтение/базовая очистка
-│  ├─ features.py        # фичи и агрегаты (Telco-специфика)
+│  ├─ session.py         # SparkSession init
+│  ├─ etl.py             # read / basic cleaning
+│  ├─ features.py        # Telco-specific features & aggregates
 │  └─ job.py             # entrypoint (config -> run)
 ├─ configs/
-│  └─ config.yaml        # пути/параметры пайплайна
+│  └─ config.yaml        # pipeline parameters
 ├─ data/
 │  └─ WA_Fn-UseC_-Telco-Customer-Churn.csv
-├─ artifacts/            # выходы пайплайна (в .gitignore)
+├─ artifacts/            # outputs (gitignored)
 ├─ notebooks/
-│  └─ 01_demo.ipynb      # демонстрационный ноутбук
+│  └─ 01_demo.ipynb      # demonstration notebook
 ├─ requirements.txt
 ├─ .gitignore
 └─ LICENSE
@@ -39,54 +39,55 @@
 
 ---
 
-## Установка
+## Setup
 
-**Требования:** Python **3.9+**; Java (Temurin **11/17**).  
-Windows (по желанию): `winutils.exe` и `hadoop.dll` — не нужны в `local[*]`, но поддерживаются.
+**Requirements:** Python **3.9+**; Java (Temurin **11/17**).  
+Windows: `winutils.exe` / `hadoop.dll` are optional in `local[*]` mode.
 
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
 
-Если Spark не стартует, проверьте JAVA_HOME и PATH.
+> If Spark does not start, verify `JAVA_HOME` and `PATH`.
 
-## Быстрый запуск
+---
+
+## Quick start
 
 ```bash
 python -m src.job --config configs/config.yaml
+```
 
+**Outputs**
+- `artifacts/features/` — engineered features (Parquet)  
+- `artifacts/report/`   — grouped aggregates (Parquet)
 
-## Результат:
-artifacts/features/ — фичи после инженерии (Parquet).
-artifacts/report/ — агрегированный отчёт (Parquet).
+---
 
-## Что делает пайплайн (Telco-пример)
+## What the pipeline does (Telco example)
 
-Очистка
+### Cleaning
+- Trim string columns, drop duplicates  
+- Safe cast for `TotalCharges` (handles empty strings)
 
-trim строковых столбцов, удаление дублей.
+### Features
+- `MonthlyCharges_log1p`, `TotalCharges_log1p`  
+- `TenureBucket`: `0–12`, `13–24`, `25–48`, `49+`  
+- `MCharges_per_Tenure` = `MonthlyCharges / tenure` (zero‑safe)  
+- Service flags: `HasFiber`, `HasStreamingTV`, `HasOnlineSecurity`, `HasTechSupport`, etc.
 
-Безопасное приведение TotalCharges к числу (в исходнике есть пустые строки).
+### Grouped report
+- Default slice: `Contract × InternetService × Churn`  
+- Metrics: `n`, `mean / std / p50` for charges
 
-Фичи
+---
 
-MonthlyCharges_log1p, TotalCharges_log1p.
+## Configuration
 
-TenureBucket: 0–12, 13–24, 25–48, 49+.
+Adjust paths and groupings in `configs/config.yaml`:
 
-MCharges_per_Tenure: отношение MonthlyCharges/tenure (устойчиво к нулям).
-
-Бинарные флаги услуг: HasFiber, HasStreamingTV, HasOnlineSecurity, HasTechSupport и др.
-
-Отчёт (группировки)
-
-По умолчанию: Contract × InternetService × Churn.
-
-Метрики: n, mean/std/p50 по чарджам.
-
-## Конфиг
-
-Редактируйте пути и группировки в configs/config.yaml:
+```yaml
 app_name: "SparkTelcoChurn"
 shuffle_partitions: 8
 
@@ -102,30 +103,33 @@ report:
 output:
   dir: "artifacts"
   fmt: "parquet"
+```
 
-## Ноутбук
+---
 
-notebooks/01_demo.ipynb — быстрый интерактивный обзор: df.show(), базовые проверки и (при желании) пара графиков.
-Вся логика пайплайна находится в src/, ноут — только для демонстрации.
+## Notebook
 
-## Тонкости и отладка
+`notebooks/01_demo.ipynb` is a lightweight, interactive walkthrough (`df.show()`, basic checks).  
+All pipeline logic lives under `src/`.
 
-Java/Spark: убедитесь, что установлены Java 11/17 и корректно прописан JAVA_HOME.
+---
 
-Windows: winutils опционален для локального режима; если используете — положите в D:\hadoop\bin и добавьте в PATH.
+## Troubleshooting
 
-Производительность: можно менять spark.sql.shuffle.partitions через конфиг.
+- **Java/Spark**: ensure Java 11/17 is installed and `JAVA_HOME` is set.  
+- **Windows**: `winutils` is optional for local mode; if used, place under `D:\hadoop\bin` and add to `PATH`.  
+- **Performance**: tune `spark.sql.shuffle.partitions` via config.
 
-## План расширения
+---
 
-Добавить Spark ML (фича-пайплайн + логистическая регрессия по Churn).
+## Roadmap (optional)
+- Spark ML step (feature pipeline + logistic regression on `Churn`)  
+- CI (GitHub Actions): smoke `pytest` + linters  
+- Docker image for offline runs
 
-CI (GitHub Actions): pytest и линтеры.
+---
 
-Докер-образ для оффлайн-запуска.
+## License
 
-## Лицензия
-
-MIT — см. LICENSE
-.
-Датасет: IBM Telco Customer Churn (educational sample).
+MIT — see [`LICENSE`](LICENSE).  
+Dataset: IBM **Telco Customer Churn** (educational sample).
